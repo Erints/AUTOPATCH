@@ -1,11 +1,13 @@
 name: AUTOPATCH-Scanner
-
-# This tells GitHub to run the scan every time you push code
 on: [push]
 
 jobs:
   security-job:
     runs-on: ubuntu-latest
+    # This section allows the bot to save the fixed code
+    permissions:
+      contents: write 
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -15,5 +17,14 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Run Scanner
+      - name: Run Scanner and Apply Fixes
         run: python scanner.py
+
+      - name: Save Fixed Code to GitHub
+        # These commands tell Git who is saving the file and push it back
+        run: |
+          git config --global user.name 'AUTOPATCH-Bot'
+          git config --global user.email 'bot@autopatch.ai'
+          git add .
+          git commit -m "🛡️ AUTOPATCH: Automated security fixes applied" || echo "No changes to commit"
+          git push
