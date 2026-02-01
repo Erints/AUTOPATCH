@@ -4,9 +4,9 @@ on: [push]
 jobs:
   security-job:
     runs-on: ubuntu-latest
-    # This section allows the bot to save the fixed code
     permissions:
-      contents: write 
+      contents: write
+      pull-requests: write # Required to create a PR
     
     steps:
       - name: Checkout code
@@ -20,11 +20,19 @@ jobs:
       - name: Run Scanner and Apply Fixes
         run: python scanner.py
 
-      - name: Save Fixed Code to GitHub
-        # These commands tell Git who is saving the file and push it back
+      - name: Create Fix Branch and Push
         run: |
           git config --global user.name 'AUTOPATCH-Bot'
           git config --global user.email 'bot@autopatch.ai'
+          
+          # Create a unique branch name for the fixes
+          git checkout -b autopatch-fixes-${{ github.run_id }}
+          
           git add .
-          git commit -m "🛡️ AUTOPATCH: Automated security fixes applied" || echo "No changes to commit"
-          git push
+          git commit -m "🛡️ AUTOPATCH: Security fixes applied" || echo "No changes"
+          git push origin autopatch-fixes-${{ github.run_id }}
+          
+          # This command creates the Pull Request automatically
+          gh pr create --title "🛡️ Security Fixes: AUTOPATCH" --body "Automated fixes for identified vulnerabilities. Please review before merging to main." --base main --head autopatch-fixes-${{ github.run_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
