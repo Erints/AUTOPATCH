@@ -1,5 +1,8 @@
 name: AUTOPATCH-Scanner
-on: [push]
+on:
+push:
+  repository_dispatch:
+    types: [trigger-patch]  # This must match the name in Lovable
 
 jobs:
   security-job:
